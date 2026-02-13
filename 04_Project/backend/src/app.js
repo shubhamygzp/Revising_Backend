@@ -2,9 +2,10 @@ const express = require("express");
 const multer = require("multer");
 const uploadFile = require("./services/storage.service.js");
 const postModel = require("./models/post.model.js");
-
+const cors = require("cors");
 
 const app = express();
+app.use(cors());   // middleware
 app.use(express.json()); // middleware for reading raw data sent to server from client
 
 const upload = multer({ storage: multer.memoryStorage() });    // 
