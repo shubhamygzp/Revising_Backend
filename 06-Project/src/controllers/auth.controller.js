@@ -2,6 +2,7 @@ const userModel = require("../models/user.model.js");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
+// registerUser
 async function registerUser(req, res) {
   const { userName, email, password, role = "user" } = req.body;
 
@@ -50,4 +51,44 @@ async function registerUser(req, res) {
   });
 }
 
-module.exports = { registerUser };
+// loginUser
+async function loginUser(req, res) {
+  const { userName, email, password } = req.body;
+
+  const user = await userModel.findOne({
+    $or: [{ userName }, { email }],
+  });
+
+  if (!user) {
+    return res.status(401).json({
+      message: "Invalid credentials",
+    });
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({
+      message: "Invalid password",
+    });
+  }
+
+  const token = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+  );
+
+  res.cookie("token", token);
+
+  return res.status(200).json({
+    message: "User logged in successfully",
+    user: {
+      id: user._id,
+      userName: user.userName,
+      email: user.email,
+      role: user.role,
+    },
+  });
+}
+
+module.exports = { registerUser, loginUser };
